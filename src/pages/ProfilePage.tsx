@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { LogOut } from 'lucide-react'
 import { Avatar, AVATAR_COLORS } from '@/components/Avatar'
@@ -86,6 +87,11 @@ export function ProfilePage() {
             Cult UI
           </a>
           .
+        </p>
+        <p>
+          <Link to="/privacidad" className="underline">
+            Política de privacidad
+          </Link>
         </p>
       </footer>
     </div>

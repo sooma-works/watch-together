@@ -6,6 +6,7 @@ import { HomePage } from '@/pages/HomePage'
 import { JoinPage } from '@/pages/JoinPage'
 import { ListPage } from '@/pages/ListPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { PrivacyPage } from '@/pages/PrivacyPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SearchPage } from '@/pages/SearchPage'
 
@@ -22,6 +23,7 @@ export function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/unirse/:code" element={<JoinPage />} />
+      <Route path="/privacidad" element={<PrivacyPage />} />
       <Route
         element={
           <RequireAuth>

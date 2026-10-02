@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { Eye, EyeOff } from 'lucide-react'
 import { Btn } from '@/components/Button'
@@ -178,11 +178,16 @@ export function LoginPage() {
           </form>
         </motion.div>
 
-        {backend.kind === 'local' && (
-          <p className="label mt-auto pt-8 text-center leading-relaxed normal-case tracking-normal text-faint">
-            Modo local: las cuentas viven en este navegador. "Google" entra con una cuenta demo.
-          </p>
-        )}
+        <div className="mt-auto space-y-3 pt-8 text-center">
+          {backend.kind === 'local' && (
+            <p className="label leading-relaxed normal-case tracking-normal text-faint">
+              Modo local: las cuentas viven en este navegador. "Google" entra con una cuenta demo.
+            </p>
+          )}
+          <Link to="/privacidad" className="label inline-block text-faint hover:text-fg">
+            Privacidad
+          </Link>
+        </div>
       </div>
     </div>
   )
