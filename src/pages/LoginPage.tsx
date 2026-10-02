@@ -105,9 +105,10 @@ export function LoginPage() {
     <div className="relative mx-auto flex min-h-dvh max-w-md flex-col overflow-hidden px-6 pb-8">
       <PosterMarquee />
 
-      <div className="relative mt-[30dvh] flex flex-1 flex-col">
+      <div className="relative mt-[24dvh] flex flex-1 flex-col">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <h1 className="heading text-[3rem]">
+          <img src="/favicon.svg" alt="" className="size-10" />
+          <h1 className="heading mt-5 text-[3.75rem]">
             Watch
             <br />
             2gder<span className="text-signal">.</span>
