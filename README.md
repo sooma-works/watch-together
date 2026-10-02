@@ -1,4 +1,4 @@
-# Watch Together
+# Watch 2gder
 
 Listas compartidas de cosas para mirar: películas, series, anime y documentales.
 Cada lista se puede compartir con quien quieras (pareja, amigos…) con un link o

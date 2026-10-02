@@ -185,6 +185,25 @@ export const localBackend: Backend = {
       return user
     },
 
+    async setAvatar(image) {
+      // En local la foto se guarda como data URL dentro de localStorage
+      const avatarUrl = image
+        ? await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.onerror = () => reject(new BackendError('No pudimos leer la foto.'))
+            reader.readAsDataURL(image)
+          })
+        : undefined
+      const user = await tx((db, me) => {
+        const u = db.users.find((u) => u.id === requireUser(me))!
+        u.avatarUrl = avatarUrl
+        return publicProfile(u)
+      })
+      emit(user)
+      return user
+    },
+
     onChange(cb) {
       listeners.add(cb)
       return () => listeners.delete(cb)

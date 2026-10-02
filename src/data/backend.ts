@@ -16,6 +16,8 @@ export interface Backend {
     signInWithGoogle(returnTo?: string): Promise<Profile | null>
     signOut(): Promise<void>
     updateProfile(patch: Partial<Pick<Profile, 'name' | 'color'>>): Promise<Profile>
+    /** Sube una foto ya recortada (cuadrada, webp) o la quita con `null`. */
+    setAvatar(image: Blob | null): Promise<Profile>
     onChange(cb: (user: Profile | null) => void): () => void
   }
 

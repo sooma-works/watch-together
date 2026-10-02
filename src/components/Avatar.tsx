@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types'
 
@@ -11,10 +12,26 @@ export function Avatar({
   size = 'sm',
   className,
 }: {
-  profile: Pick<Profile, 'name' | 'color'>
+  profile: Pick<Profile, 'name' | 'color' | 'avatarUrl'>
   size?: keyof typeof SIZES
   className?: string
 }) {
+  const [broken, setBroken] = useState<string | null>(null)
+  const photo = profile.avatarUrl && broken !== profile.avatarUrl ? profile.avatarUrl : null
+
+  if (photo) {
+    return (
+      <img
+        src={photo}
+        alt={profile.name}
+        title={profile.name}
+        // Las fotos de Google fallan si se manda el referrer
+        referrerPolicy="no-referrer"
+        onError={() => setBroken(photo)}
+        className={cn('inline-block shrink-0 rounded-full bg-surface-2 object-cover ring-2 ring-bg', SIZES[size], className)}
+      />
+    )
+  }
   return (
     <span
       title={profile.name}

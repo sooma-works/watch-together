@@ -127,7 +127,7 @@ export function ShareSheet({
   async function share() {
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${list.emoji} ${list.name}`, text: `Sumate a mi lista "${list.name}" en Watch Together`, url: link })
+        await navigator.share({ title: `${list.emoji} ${list.name}`, text: `Sumate a mi lista "${list.name}" en Watch 2gder`, url: link })
       } catch {
         // cancelado por el usuario
       }

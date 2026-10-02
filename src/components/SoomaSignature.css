@@ -1,0 +1,102 @@
+/*
+  Firma de Sooma para Watch 2gder. La app es casi negra,
+  así que el lockup va en blanco y el isotipo usa la variante
+  de dos tonos "papel + tinta" (mismo criterio que el monocromo oficial,
+  con los tonos invertidos para leerse sobre fondo oscuro) tal cual,
+  sin filtros ni recolores. La tipografía se declara acá a propósito:
+  la firma no se adapta a la tipografía del sitio que la aloja.
+*/
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&display=swap');
+
+.sooma-signature {
+  display: inline-flex;
+  align-items: center;
+  color: #fff;
+  font:
+    700 14px/1.25 'Bricolage Grotesque',
+    sans-serif;
+  letter-spacing: -0.045em;
+  text-decoration: none;
+  opacity: 0.72;
+  transition: opacity 0.2s;
+}
+.sooma-signature:hover {
+  opacity: 1;
+}
+.sooma-sig-sooma,
+.sooma-logo-dot {
+  color: inherit;
+}
+.sooma-sig-mark {
+  display: inline-flex;
+  align-items: center;
+  width: 0;
+  margin-right: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: scale(0.5) rotate(-14deg);
+  animation: soomaSigMark 8s ease-in-out infinite;
+}
+.sooma-sig-mark img {
+  width: 18px;
+  height: 18px;
+}
+.sooma-sig-hecho {
+  display: inline-block;
+  max-width: 130px;
+  opacity: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: soomaSigHecho 8s ease-in-out infinite;
+}
+@keyframes soomaSigMark {
+  0%,
+  40% {
+    width: 0;
+    margin-right: 0;
+    opacity: 0;
+    transform: scale(0.5) rotate(-14deg);
+  }
+  52%,
+  92% {
+    width: 18px;
+    margin-right: 6px;
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    width: 0;
+    margin-right: 0;
+    opacity: 0;
+    transform: scale(0.5) rotate(-14deg);
+  }
+}
+@keyframes soomaSigHecho {
+  0%,
+  40% {
+    max-width: 130px;
+    opacity: 1;
+  }
+  52%,
+  92% {
+    max-width: 0;
+    opacity: 0;
+  }
+  100% {
+    max-width: 130px;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sooma-sig-mark,
+  .sooma-sig-hecho {
+    animation: none;
+  }
+  .sooma-sig-mark {
+    width: 18px;
+    margin-right: 6px;
+    opacity: 1;
+    transform: none;
+  }
+}
