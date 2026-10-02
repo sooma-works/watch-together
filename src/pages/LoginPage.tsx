@@ -107,18 +107,11 @@ export function LoginPage() {
 
       <div className="relative mt-[30dvh] flex flex-1 flex-col">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="flex items-center gap-2">
-            <img src="/favicon.svg" alt="" className="size-7" />
-            <span className="label">Listas compartidas · v0.3</span>
-          </div>
-          <h1 className="heading mt-5 text-[3rem]">
+          <h1 className="heading text-[3rem]">
             Watch
             <br />
             2gder<span className="text-signal">.</span>
           </h1>
-          <p className="mt-4 text-[15px] leading-relaxed text-dim">
-            Listas compartidas de pelis, series y anime. Lo que están viendo, lo que vieron y lo que les falta.
-          </p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="mt-8">
