@@ -20,7 +20,7 @@ interface OgImageSectionProps {
   /** Inner tab/bubble radius — should be outer radius minus container padding (~3px) */
   roundedInner?: string
   onChange?: () => void
-  /** Modo controlado (agregado en Watch Together). */
+  /** Modo controlado (agregado en Watch 2gder). */
   value?: number
   onValueChange?: (id: number) => void
   /** Clases del indicador activo. */

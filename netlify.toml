@@ -10,3 +10,14 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# El service worker y el manifest no se cachean, así las actualizaciones llegan enseguida
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"

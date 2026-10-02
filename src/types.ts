@@ -19,8 +19,9 @@ export interface Profile {
   id: string
   name: string
   email: string
-  /** Índice de color para el avatar. */
+  /** Índice de color para el avatar (fondo de la inicial si no hay foto). */
   color: number
+  avatarUrl?: string
 }
 
 export type Role = 'owner' | 'member'

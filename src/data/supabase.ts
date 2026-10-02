@@ -24,7 +24,10 @@ interface ProfileRow {
   id: string
   name: string
   color: number
+  avatar_url: string | null
 }
+
+const PROFILE_COLUMNS = 'id, name, color, avatar_url'
 interface ListRow {
   id: string
   name: string
@@ -55,7 +58,13 @@ interface ReviewRow {
 }
 
 /** El email de otras personas no se comparte: solo conocemos el propio. */
-const toProfile = (r: ProfileRow, email = ''): Profile => ({ id: r.id, name: r.name, color: r.color, email })
+const toProfile = (r: ProfileRow, email = ''): Profile => ({
+  id: r.id,
+  name: r.name,
+  color: r.color,
+  avatarUrl: r.avatar_url ?? undefined,
+  email,
+})
 
 const toList = (r: ListRow): List => ({
   id: r.id,
@@ -120,7 +129,7 @@ function must<T>(res: { data: T | null; error: PostgrestError | null }, fallback
 
 async function profileOf(user: User): Promise<Profile> {
   const row = must(
-    await sb.from('profiles').select('id, name, color').eq('id', user.id).single<ProfileRow>(),
+    await sb.from('profiles').select(PROFILE_COLUMNS).eq('id', user.id).single<ProfileRow>(),
     'No encontramos tu perfil.',
   )
   return toProfile(row, user.email ?? '')
@@ -130,6 +139,18 @@ async function currentUser(): Promise<User> {
   const { data } = await sb.auth.getSession()
   if (!data.session) throw new BackendError('Tenés que iniciar sesión.')
   return data.session.user
+}
+
+const AVATARS = 'avatars'
+
+async function saveProfile(user: User, patch: Partial<Omit<ProfileRow, 'id'>>): Promise<Profile> {
+  const row = must(
+    await sb.from('profiles').update(patch).eq('id', user.id).select(PROFILE_COLUMNS).single<ProfileRow>(),
+    'No pudimos guardar tu perfil.',
+  )
+  const profile = toProfile(row, user.email ?? '')
+  profileListeners.forEach((cb) => cb(profile))
+  return profile
 }
 
 // --- Backend --------------------------------------------------------------------
@@ -179,12 +200,26 @@ export const supabaseBackend: Backend = {
 
     async updateProfile(patch) {
       const user = await currentUser()
-      const row = must(
-        await sb.from('profiles').update(patch).eq('id', user.id).select('id, name, color').single<ProfileRow>(),
-        'No pudimos guardar tu perfil.',
-      )
-      const profile = toProfile(row, user.email ?? '')
-      profileListeners.forEach((cb) => cb(profile))
+      return saveProfile(user, patch)
+    },
+
+    async setAvatar(image) {
+      const user = await currentUser()
+      const folder = user.id
+      // Las fotos anteriores se borran: cada uno tiene una sola en Storage
+      const { data: old } = await sb.storage.from(AVATARS).list(folder)
+      const oldPaths = (old ?? []).map((f) => `${folder}/${f.name}`)
+
+      let avatarUrl: string | null = null
+      if (image) {
+        // Nombre nuevo cada vez: evita que el navegador muestre la foto vieja cacheada
+        const path = `${folder}/${Date.now()}.webp`
+        const { error } = await sb.storage.from(AVATARS).upload(path, image, { contentType: 'image/webp' })
+        if (error) throw new BackendError('No pudimos subir la foto. Probá con otra imagen.')
+        avatarUrl = sb.storage.from(AVATARS).getPublicUrl(path).data.publicUrl
+      }
+      const profile = await saveProfile(user, { avatar_url: avatarUrl })
+      if (oldPaths.length) await sb.storage.from(AVATARS).remove(oldPaths)
       return profile
     },
 
@@ -227,7 +262,7 @@ export const supabaseBackend: Backend = {
           .then(must),
         sb
           .from('list_members')
-          .select('list_id, joined_at, profiles(id, name, color)')
+          .select('list_id, joined_at, profiles(id, name, color, avatar_url)')
           .in('list_id', ids)
           .order('joined_at')
           .returns<{ list_id: string; profiles: ProfileRow }[]>()
@@ -262,7 +297,7 @@ export const supabaseBackend: Backend = {
       const rows = must(
         await sb
           .from('list_members')
-          .select('role, joined_at, profiles(id, name, color)')
+          .select('role, joined_at, profiles(id, name, color, avatar_url)')
           .eq('list_id', listId)
           .order('joined_at')
           .returns<{ role: Role; joined_at: string; profiles: ProfileRow }[]>(),

@@ -18,7 +18,7 @@ export function PrivacyPage() {
   return (
     <div className="mx-auto min-h-dvh max-w-xl px-6 pb-16 pt-safe">
       <Link to="/" className="label mt-6 inline-flex items-center gap-2 text-faint hover:text-fg">
-        <ArrowLeft className="size-3.5" /> Watch Together
+        <ArrowLeft className="size-3.5" /> Watch 2gder
       </Link>
 
       <h1 className="heading mt-8 text-[2.25rem]">
@@ -28,7 +28,7 @@ export function PrivacyPage() {
 
       <Section title="Qué es">
         <p>
-          Watch Together es una app para armar listas compartidas de películas, series, anime y documentales. La
+          Watch 2gder es una app para armar listas compartidas de películas, series, anime y documentales. La
           hace Sooma Works. Esta página cuenta qué datos guarda y para qué.
         </p>
       </Section>

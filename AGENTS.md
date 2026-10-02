@@ -1,4 +1,4 @@
-# AGENTS.md — Watch Together
+# AGENTS.md — Watch 2gder
 
 Contexto para agentes de IA que trabajen en este repo. Leelo completo antes de
 tocar código: resume qué es la app, qué se decidió y por qué, y cómo seguir.
@@ -25,18 +25,27 @@ Web app **mobile-first** para llevar **listas compartidas de cosas para mirar**
   más progreso (temporada/episodio) para series y anime.
 - **Puntaje (0.5–5, medias estrellas) y comentario son por persona.** Se muestra
   la opinión de cada miembro y el promedio del grupo.
-- El nombre **"Watch Together" es definitivo** (el usuario descartó cambiarlo).
+- El nombre es **"Watch 2gder"** (antes "Watch Together"; lo cambió el usuario el 2026-10-02, en línea con el dominio watch2gder.netlify.app). El repo y el paquete siguen llamándose `watch-together`.
 
-## Estado actual (v0.2)
+## Estado actual (v0.3)
 
-Funciona de punta a punta con un **backend local** (localStorage) que simula
-varios usuarios en el mismo navegador. Para probar compartir: crear cuenta A,
-crear lista, copiar código, cerrar sesión, crear cuenta B, entrar a `/unirse/CODIGO`.
+**En producción:** https://watch2gder.netlify.app (Netlify despliega `main` solo; config en `netlify.toml`).
 
-- Login: email + contraseña (local) y "Google" (en local entra con una cuenta demo).
-- Búsqueda: TMDB si existe `VITE_TMDB_TOKEN`; si no, catálogo demo de 16 títulos.
-- **Supabase todavía NO está conectado** (el usuario aún no creó el proyecto).
-  El esquema SQL ya está escrito pero **nunca se ejecutó contra una base real**.
+- **Backend:** Supabase (proyecto `cissbxlzmborixlxjxcm`, São Paulo) si están `VITE_SUPABASE_URL` /
+  `VITE_SUPABASE_ANON_KEY`; si no, el backend local (localStorage) que simula varios usuarios en
+  el mismo navegador. Las 3 migraciones de `supabase/migrations/` ya están aplicadas (se corren a mano
+  en el SQL Editor del panel; el usuario las pega). Probado contra la base real: app + RLS.
+- **Login:** Google (proyecto de Google Cloud `watch2gder`, app publicada) + email/contraseña.
+  "Confirm email" está **apagado a propósito**: el SMTP por defecto de Supabase solo manda mails a
+  integrantes de la organización; para activarlo hace falta SMTP propio (ej. Resend) y un dominio.
+- **Búsqueda:** TMDB (ordenada mezclando relevancia con votos/popularidad); sin token, catálogo demo.
+- **Perfil:** nombre, color y foto (Storage, bucket `avatars`, recortada a 320px webp en el cliente;
+  las cuentas de Google arrancan con su foto de Google).
+- **PWA instalable:** `public/manifest.webmanifest`, `public/sw.js` (solo en producción), íconos en `public/icons/`.
+- **Privacidad:** página pública `/privacidad` (la exige Google para publicar el login).
+- **Firma "Hecho por sooma."** en el login y el pie de Perfil (`SoomaSignature`, variante para fondo oscuro).
+
+Para probar sin tocar la base real: `VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY= npm run dev` usa el backend local.
 
 ## Stack
 
@@ -63,12 +72,14 @@ src/
   types.ts              Modelo: Media, Profile, List, Member, Item, Review, ListSummary + labels
   data/
     backend.ts          CONTRATO de la capa de datos (interfaz Backend)
+    supabase.ts         Implementación real sobre Supabase (+ realtime con `subscribe`)
     local.ts            Implementación local (localStorage) que replica las reglas de RLS
-    index.ts            Elige el backend (hoy siempre local)
+    index.ts            Elige el backend: Supabase si hay variables de entorno, si no local
     hooks.ts            Hooks de TanStack Query (lecturas + mutaciones, query keys)
   lib/
     auth.tsx            AuthProvider / useAuth / useMe (escucha backend.auth.onChange)
     catalog.ts          Búsqueda/tendencias en TMDB + catálogo demo; clasifica anime/documental
+    image.ts            Recorte cuadrado de la foto de perfil (webp)
     utils.ts            cn()
   components/
     ui/                 Componentes de Cult UI instalados con shadcn (código propio, editable)
@@ -77,7 +88,7 @@ src/
     ListSheets.tsx      Crear lista, compartir, ajustes, unirse con código, agregar a lista
     Toast.tsx           Notificaciones con la Dynamic Island (useToast)
     BottomNav, Avatar, Poster, StatusDot, StarRating, TypeBadge, Button (Btn), AppShell
-  pages/                Login, Home (listas), List, Search, Join (/unirse/:code), Profile
+  pages/                Login, Home (listas), List, Search, Join (/unirse/:code), Profile, Privacy
 supabase/migrations/    Esquema SQL con RLS, triggers y RPCs
 ```
 
@@ -122,24 +133,11 @@ Se instalan con `npx shadcn@latest add @cult-ui/<nombre>`. Ojo: re-instalar con
 - **RareUI** se evaluó y se descartó: sus componentes figuraban "not available yet" y su
   licencia exige crédito visible.
 
-## Próximo paso: Supabase
+## Pendientes
 
-Decidido: **Supabase** como backend, con login **Google + email/contraseña**.
-
-1. El usuario tiene que crear el proyecto y pasar la Project URL y la anon key (son públicas).
-2. Aplicar `supabase/migrations/20261002000000_init.sql` y **probarlo** (no se ejecutó nunca).
-   Incluye: tablas `profiles`, `lists`, `list_members`, `items`, `reviews`; RLS con helpers
-   `is_member` / `is_owner` / `shares_list_with` (security definer); trigger que crea perfil +
-   "Mi lista" al registrarse; RPCs `preview_invite`, `join_list`, `regenerate_invite`; realtime
-   en `items`, `reviews`, `list_members`.
-3. Implementar `src/data/supabase.ts` cumpliendo la interfaz `Backend` (mapear snake_case ↔ camelCase)
-   y elegirlo en `src/data/index.ts` cuando existan las variables de entorno.
-4. Suscribirse a realtime para invalidar las queries de React Query cuando otro miembro cambia algo.
-5. Google OAuth: el usuario necesita crear credenciales en Google Cloud (guiarlo).
-6. Después: deploy (ej. Vercel) para usarla desde el celular y compartir con otros; PWA instalable.
-
-Ideas pendientes mencionadas: reacciones a opiniones de otros miembros, sección
-"viendo ahora" en la home, code-splitting (el bundle supera 500 kB).
+- Activar "Confirm email" cuando haya dominio propio + SMTP (Resend).
+- Ideas mencionadas: reacciones a opiniones de otros miembros, sección "viendo ahora" en la home,
+  code-splitting (el bundle supera 500 kB).
 
 ## Git
 
@@ -157,3 +155,4 @@ Ideas pendientes mencionadas: reacciones a opiniones de otros miembros, sección
 - TMDB: "Este producto usa la API de TMDB, pero no está avalado ni certificado por TMDB."
   (está en el pie de Perfil; mantenerlo).
 - Cult UI: crédito en el pie de Perfil.
+- Sooma: firma "Hecho por sooma." (login y pie de Perfil).

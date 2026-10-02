@@ -12,12 +12,23 @@ function hash(s: string) {
 }
 
 /** Póster de TMDB, o una "ficha" plana con tipo, año y título si no hay imagen. */
-export function Poster({ media, className, compact }: { media: Media; className?: string; compact?: boolean }) {
+export function Poster({
+  media,
+  className,
+  compact,
+  eager,
+}: {
+  media: Media
+  className?: string
+  compact?: boolean
+  /** Cargar ya, aunque esté fuera de pantalla (ej. el carrusel del login). */
+  eager?: boolean
+}) {
   const [broken, setBroken] = useState(false)
   const base = cn('aspect-[2/3] w-full overflow-hidden rounded-lg border border-line', className)
 
   if (media.posterUrl && !broken) {
-    return <img src={media.posterUrl} alt={media.title} loading="lazy" onError={() => setBroken(true)} className={cn(base, 'object-cover')} />
+    return <img src={media.posterUrl} alt={media.title} loading={eager ? 'eager' : 'lazy'} onError={() => setBroken(true)} className={cn(base, 'object-cover')} />
   }
   return (
     <div className={cn(base, 'flex flex-col justify-between p-2')} style={{ backgroundColor: TONES[hash(media.id) % TONES.length] }}>

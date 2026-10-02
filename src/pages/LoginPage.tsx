@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
+import { useQuery } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { Btn } from '@/components/Button'
 import { Poster } from '@/components/Poster'
+import { SoomaSignature } from '@/components/SoomaSignature'
 import { backend } from '@/data'
-import { demoSuggestions } from '@/lib/catalog'
+import { demoSuggestions, trendingMedia, usingDemoCatalog } from '@/lib/catalog'
 import { useAuth } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 
@@ -14,14 +16,29 @@ type Mode = 'signin' | 'signup'
 const field =
   'h-12 w-full rounded-xl border border-line bg-surface px-4 text-[15px] outline-none transition placeholder:text-faint focus:border-line-strong focus:bg-surface-2'
 
-/** Tres filas de pósters que se deslizan en direcciones opuestas. */
+/** Tres filas de pósters (tendencias de TMDB) que se deslizan en direcciones opuestas. */
 function PosterMarquee() {
+  // Misma query que el buscador: si después entrás a Buscar, ya está en caché
+  const trending = useQuery({ queryKey: ['trending'], queryFn: ({ signal }) => trendingMedia(signal), staleTime: 30 * 60_000 })
+  const withPosters = (trending.data ?? []).filter((m) => m.posterUrl)
+  // Sin token de TMDB (o si falla) quedan las fichas del catálogo demo
+  const source = withPosters.length >= 9 ? withPosters : demoSuggestions
+  const ready = usingDemoCatalog || trending.isError || trending.isSuccess
+
+  const third = Math.ceil(source.length / 3)
   const rows = [0, 1, 2].map((r) => {
-    const shifted = [...demoSuggestions.slice(r * 5), ...demoSuggestions.slice(0, r * 5)]
+    const shifted = [...source.slice(r * third), ...source.slice(0, r * third)]
     return [...shifted, ...shifted]
   })
+  if (!ready) return null
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52dvh] overflow-hidden">
+    <motion.div
+      aria-hidden
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.2 }}
+      className="pointer-events-none absolute inset-x-0 top-0 h-[52dvh] overflow-hidden"
+    >
       <div className="flex -rotate-[8deg] flex-col gap-3 pt-6" style={{ marginLeft: '-20%', width: '140%' }}>
         {rows.map((row, r) => (
           <motion.div
@@ -32,14 +49,14 @@ function PosterMarquee() {
           >
             {row.map((m, i) => (
               <div key={i} className="w-24 shrink-0">
-                <Poster media={m} />
+                <Poster media={m} eager />
               </div>
             ))}
           </motion.div>
         ))}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-bg/20 via-bg/70 to-bg" />
-    </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-bg/30 via-bg/75 to-bg" />
+    </motion.div>
   )
 }
 
@@ -92,12 +109,12 @@ export function LoginPage() {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="flex items-center gap-2">
             <img src="/favicon.svg" alt="" className="size-7" />
-            <span className="label">Listas compartidas · v0.2</span>
+            <span className="label">Listas compartidas · v0.3</span>
           </div>
           <h1 className="heading mt-5 text-[3rem]">
             Watch
             <br />
-            Together<span className="text-signal">.</span>
+            2gder<span className="text-signal">.</span>
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-dim">
             Listas compartidas de pelis, series y anime. Lo que están viendo, lo que vieron y lo que les falta.
@@ -184,9 +201,13 @@ export function LoginPage() {
               Modo local: las cuentas viven en este navegador. "Google" entra con una cuenta demo.
             </p>
           )}
-          <Link to="/privacidad" className="label inline-block text-faint hover:text-fg">
-            Privacidad
-          </Link>
+          <div className="flex items-center justify-center gap-4">
+            <SoomaSignature />
+            <span className="h-3 w-px bg-line-strong" />
+            <Link to="/privacidad" className="label text-faint hover:text-fg">
+              Privacidad
+            </Link>
+          </div>
         </div>
       </div>
     </div>
