@@ -30,6 +30,8 @@ interface TmdbResult {
   genre_ids?: number[]
   original_language?: string
   origin_country?: string[]
+  vote_count?: number
+  popularity?: number
 }
 
 function classify(r: TmdbResult): MediaType {
@@ -62,8 +64,25 @@ async function tmdb<T>(path: string, params: Record<string, string>, signal?: Ab
   return res.json() as Promise<T>
 }
 
-const onlyTitles = (results: TmdbResult[]) =>
-  results.filter((r) => r.media_type === 'movie' || r.media_type === 'tv').map(normalize)
+const isTitle = (r: TmdbResult) => r.media_type === 'movie' || r.media_type === 'tv'
+
+const onlyTitles = (results: TmdbResult[]) => results.filter(isTitle).map(normalize)
+
+/**
+ * TMDB ordena la búsqueda por parecido del texto, así que spin-offs o títulos
+ * desconocidos con nombres parecidos tapan a lo que la gente busca. Mezclamos
+ * su orden con cuánta gente votó el título (y cuán popular está ahora, para
+ * que los estrenos no queden abajo de todo).
+ */
+function rankByRelevance(results: TmdbResult[]): TmdbResult[] {
+  const score = (r: TmdbResult, position: number) =>
+    Math.log10((r.vote_count ?? 0) + 1) + 0.5 * Math.log10((r.popularity ?? 0) + 1) - 0.2 * position
+  return results
+    .filter(isTitle)
+    .map((r, i) => ({ r, s: score(r, i) }))
+    .sort((a, b) => b.s - a.s)
+    .map(({ r }) => r)
+}
 
 /** Lo más visto de la semana (o el catálogo demo). */
 export async function trendingMedia(signal?: AbortSignal): Promise<Media[]> {
@@ -78,7 +97,7 @@ export async function searchMedia(query: string, signal?: AbortSignal): Promise<
   if (!TOKEN) return searchDemo(q)
 
   const data = await tmdb<{ results: TmdbResult[] }>('/search/multi', { query: q, include_adult: 'false', page: '1' }, signal)
-  return onlyTitles(data.results)
+  return onlyTitles(rankByRelevance(data.results))
 }
 
 // ---------------------------------------------------------------------------
