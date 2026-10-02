@@ -1,7 +1,8 @@
 import type { Backend } from './backend'
 import { localBackend } from './local'
+import { supabaseBackend, supabaseConfigured } from './supabase'
 
-// Cuando conectemos Supabase: `import.meta.env.VITE_SUPABASE_URL ? supabaseBackend : localBackend`
-export const backend: Backend = localBackend
+// Con las variables de Supabase en .env usamos la base real; si no, el backend local.
+export const backend: Backend = supabaseConfigured ? supabaseBackend : localBackend
 
 export { BackendError } from './backend'

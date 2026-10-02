@@ -2,7 +2,7 @@
 -- Listas compartibles, títulos con estado compartido y una opinión por persona.
 -- Las reglas de acceso (RLS) replican las de src/data/local.ts.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ---------------------------------------------------------------------------
 -- Tablas
@@ -60,10 +60,12 @@ create table public.reviews (
 -- ---------------------------------------------------------------------------
 -- Helpers
 
+-- pgcrypto vive en el schema `extensions` en Supabase: se llama con el schema
+-- explícito porque varias funciones fijan search_path = public.
 create or replace function public.gen_invite_code() returns text
-language sql volatile as $$
+language sql volatile set search_path = public, extensions as $$
   select string_agg(substr('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 1 + (get_byte(b, i) % 32), 1), '')
-  from gen_random_bytes(6) as b, generate_series(0, 5) as i
+  from extensions.gen_random_bytes(6) as b, generate_series(0, 5) as i
 $$;
 
 -- security definer: evita recursión de RLS al consultar list_members desde sus propias políticas
@@ -117,9 +119,7 @@ create trigger items_finished before insert or update of status on public.items
 create or replace function public.lists_before_insert() returns trigger
 language plpgsql as $$
 begin
-  if new.invite_code is null or new.invite_code = '' then
-    new.invite_code := public.gen_invite_code();
-  end if;
+  new.invite_code := public.gen_invite_code();  -- nunca lo elige el cliente
   return new;
 end $$;
 
@@ -142,11 +142,11 @@ begin
   insert into profiles (id, name, color)
   values (
     new.id,
-    coalesce(
-      nullif(new.raw_user_meta_data ->> 'name', ''),
-      nullif(new.raw_user_meta_data ->> 'full_name', ''),
+    left(coalesce(
+      nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
+      nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
       split_part(new.email, '@', 1)
-    ),
+    ), 60),
     floor(random() * 8)::smallint
   );
   insert into lists (name, emoji, owner_id, is_personal) values ('Mi lista', '🍿', new.id, true);
@@ -219,7 +219,10 @@ create policy profiles_update on public.profiles for update
   using (id = auth.uid()) with check (id = auth.uid());
 
 -- lists
-create policy lists_select on public.lists for select using (public.is_member(id));
+-- owner_id = auth.uid(): al crear una lista con insert…returning, la membresía
+-- la agrega un trigger AFTER que la política todavía no ve.
+create policy lists_select on public.lists for select
+  using (owner_id = auth.uid() or public.is_member(id));
 create policy lists_insert on public.lists for insert
   with check (owner_id = auth.uid() and is_personal = false);
 create policy lists_update on public.lists for update

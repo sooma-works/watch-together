@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Item, Media, Status } from '@/types'
 import { backend } from './index'
@@ -35,6 +36,28 @@ export const useLocate = (mediaId: string | undefined) =>
 
 export const useInvitePreview = (code: string) =>
   useQuery({ queryKey: keys.invite(code), queryFn: () => backend.lists.previewInvite(code) })
+
+/** Mantiene las pantallas al día cuando otro miembro cambia algo (realtime). */
+export function useRealtimeSync() {
+  const qc = useQueryClient()
+  useEffect(() => {
+    if (!backend.subscribe) return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const unsubscribe = backend.subscribe(() => {
+      // Agrupa ráfagas de eventos (ej. borrar una lista con muchos títulos)
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        for (const key of [keys.lists, ['list'], ['members'], ['items'], ['reviews'], ['locate']]) {
+          qc.invalidateQueries({ queryKey: key })
+        }
+      }, 300)
+    })
+    return () => {
+      clearTimeout(timer)
+      unsubscribe()
+    }
+  }, [qc])
+}
 
 // --- Escrituras -----------------------------------------------------------
 

@@ -45,6 +45,9 @@ export interface Backend {
     ofList(listId: string): Promise<Review[]>
     upsert(itemId: string, patch: { rating?: number | null; comment?: string | null }): Promise<Review>
   }
+
+  /** Avisa cuando otro miembro cambia algo en mis listas. Devuelve la función para cortar. */
+  subscribe?(onChange: () => void): () => void
 }
 
 export class BackendError extends Error {}
