@@ -105,7 +105,7 @@ export function LoginPage() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="mt-8">
-          <Btn variant="soft" size="lg" className="w-full" disabled={!!loading} onClick={() => run('google', backend.auth.signInWithGoogle)}>
+          <Btn variant="soft" size="lg" className="w-full" disabled={!!loading} onClick={() => run('google', () => backend.auth.signInWithGoogle(from))}>
             <GoogleIcon /> {loading === 'google' ? 'Conectando…' : 'Continuar con Google'}
           </Btn>
 

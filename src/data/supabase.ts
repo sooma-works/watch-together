@@ -153,7 +153,7 @@ export const supabaseBackend: Backend = {
       const { data, error } = await sb.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { name: name.trim() } },
+        options: { data: { name: name.trim() }, emailRedirectTo: window.location.origin },
       })
       if (error) authError(error)
       // Con "Confirm email" activado no hay sesión hasta que confirme el mail
@@ -163,11 +163,11 @@ export const supabaseBackend: Backend = {
       return profileOf(data.user)
     },
 
-    async signInWithGoogle() {
+    async signInWithGoogle(returnTo = '/') {
       // Redirige a Google; al volver, onChange avisa la sesión nueva.
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: window.location.origin + returnTo },
       })
       if (error) authError(error)
       return null

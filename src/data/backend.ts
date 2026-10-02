@@ -12,7 +12,8 @@ export interface Backend {
     getSession(): Promise<Profile | null>
     signIn(email: string, password: string): Promise<Profile>
     signUp(input: { name: string; email: string; password: string }): Promise<Profile>
-    signInWithGoogle(): Promise<Profile | null>
+    /** `returnTo`: ruta a la que volver después del login (ej. un link de invitación). */
+    signInWithGoogle(returnTo?: string): Promise<Profile | null>
     signOut(): Promise<void>
     updateProfile(patch: Partial<Pick<Profile, 'name' | 'color'>>): Promise<Profile>
     onChange(cb: (user: Profile | null) => void): () => void
